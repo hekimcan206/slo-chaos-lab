@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>SloChaosLab.Ledger</RootNamespace>
+    <Description>Ledger rules vendored from hekimcan206/ledger-recon: balanced entries, integer money, request fingerprints. No I/O.</Description>
+  </PropertyGroup>
+
+</Project>
