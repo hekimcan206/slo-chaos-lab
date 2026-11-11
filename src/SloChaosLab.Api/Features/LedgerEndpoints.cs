@@ -35,14 +35,20 @@ internal static class LedgerEndpoints
     public const string ReplayedHeader = "Idempotent-Replayed";
     private const int MaxKeyLength = 128;
 
-    public static IEndpointRouteBuilder MapLedgerEndpoints(this IEndpointRouteBuilder app)
+    public const string PostingLimiter = "posting";
+
+    public static IEndpointRouteBuilder MapLedgerEndpoints(this IEndpointRouteBuilder app, bool shedLoad = false)
     {
-        app.MapPost(PostRoute, PostAsync)
+        var post = app.MapPost(PostRoute, PostAsync)
             .WithTags("Journal entries")
             .WithSummary("Post a balanced journal entry exactly once")
             .WithDescription(
                 "Requires an Idempotency-Key header. Repeating a request with the same key and payload returns the original entry " +
                 "(header Idempotent-Replayed: true) without writing anything. The same key with a different payload is rejected with 422.");
+        if (shedLoad)
+        {
+            post.RequireRateLimiting(PostingLimiter);
+        }
 
         app.MapGet($"{PostRoute}/{{id:guid}}", GetEntryAsync).WithTags("Journal entries").WithSummary("Get a journal entry with its postings");
         app.MapGet("/api/v1/accounts/{code}", GetAccountAsync).WithTags("Accounts").WithSummary("Get an account and its balance");

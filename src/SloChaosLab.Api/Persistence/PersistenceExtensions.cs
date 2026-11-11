@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Npgsql;
+using SloChaosLab.Api.Infrastructure;
 
 namespace SloChaosLab.Api.Persistence;
 
@@ -15,21 +16,49 @@ internal static class PersistenceExtensions
         var connectionString = configuration.GetConnectionString("Default")
             ?? throw new InvalidOperationException("Connection string 'Default' is not configured.");
 
-        services.AddSingleton(_ => CreateDataSource(connectionString));
+        var tuning = configuration.GetSection(DatabaseOptions.Section).Get<DatabaseOptions>() ?? new DatabaseOptions();
+        services.AddSingleton(_ => CreateDataSource(connectionString, tuning));
         services.AddSingleton(sp =>
         {
             var migrator = configuration.GetConnectionString("Migrator");
             // Without a dedicated migrator connection (tests, local runs) the request-path data source is used.
             return new MigrationRunner(
-                string.IsNullOrWhiteSpace(migrator) ? sp.GetRequiredService<NpgsqlDataSource>() : CreateDataSource(migrator),
+                string.IsNullOrWhiteSpace(migrator) ? sp.GetRequiredService<NpgsqlDataSource>() : CreateDataSource(migrator, name: "migrator"),
                 sp.GetRequiredService<ILogger<MigrationRunner>>());
         });
         return services;
     }
 
-    public static NpgsqlDataSource CreateDataSource(string connectionString)
+    public static NpgsqlDataSource CreateDataSource(string connectionString, DatabaseOptions? tuning = null, string name = "request-path")
     {
-        var builder = new NpgsqlDataSourceBuilder(connectionString);
+        // The name becomes the pool name on the Npgsql metrics (instead of the connection string), so dashboards
+        // can select the request-path pool.
+        var builder = new NpgsqlDataSourceBuilder(connectionString) { Name = name };
+        var csb = builder.ConnectionStringBuilder;
+
+        // Client-side timeouts and pool size come from the lab profile (docs/adr/0004). Unset means Npgsql's defaults:
+        // 15 s to connect or wait for a pooled connection, 30 s per command, 100 connections.
+        if (tuning?.ConnectTimeoutSeconds is { } connect)
+        {
+            csb.Timeout = connect;
+        }
+
+        if (tuning?.CommandTimeoutSeconds is { } command)
+        {
+            csb.CommandTimeout = command;
+        }
+
+        if (tuning?.CancellationTimeoutMs is { } cancellation)
+        {
+            // -1: on timeout or cancellation, break the connection at once instead of sending a cancel request over
+            // a second connection and waiting for it, which during a partition hangs just like the first.
+            csb.CancellationTimeout = cancellation;
+        }
+
+        if (tuning?.MaxPoolSize is { } pool)
+        {
+            csb.MaxPoolSize = pool;
+        }
 
         // Carried over from ledger-recon: a request never queues forever behind a row lock, and an abandoned
         // transaction cannot pin locks. These are server-side guards; client-side timeouts are a separate decision

@@ -27,7 +27,7 @@ internal static class Observability
         {
             o.IncludeScopes = true;
             o.UseUtcTimestamp = true;
-            o.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ ";
+            o.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
         });
 
         var otlpEndpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
