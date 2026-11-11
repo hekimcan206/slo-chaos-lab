@@ -1,6 +1,7 @@
 // Builds the Grafana dashboard as code: node tools/dashboard/build-dashboard.mjs > deploy/grafana/dashboards/slo.json
 // The JSON is committed (Grafana provisions it read-only); edit this file, not the JSON.
 const SEL = 'job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST"';
+const POOL = 'db_client_connection_pool_name="request-path"';
 let id = 1;
 const ds = { type: "prometheus", uid: "prometheus" };
 const t = (expr, legend) => ({ datasource: ds, expr, legendFormat: legend, refId: String.fromCharCode(64 + id % 26 + 1) });
@@ -44,8 +45,11 @@ const panels = [
     options: { showValue: "never", mergeValues: true, rowHeight: 0.8 },
     fieldConfig: { defaults: { color: { mode: "fixed", fixedColor: "red" }, mappings: [{ type: "value", options: { "1": { text: "firing", color: "red" } } }] }, overrides: [] } },
   ts("Database connection pool (Npgsql)", 0, 25, 12, 8, [
-    t("sum by (state) (db_client_connections_usage)", "{{state}}"), t("sum(db_client_connections_max)", "max"),
-    t("sum(db_client_connections_pending_requests)", "waiting for a connection")], "none"),
+    t(`sum by (db_client_connection_state) (db_client_connection_count{${POOL}})`, "{{db_client_connection_state}}"), t(`sum(db_client_connection_max{${POOL}})`, "max"),
+    t(`sum(db_client_connection_pending_requests{${POOL}}) or vector(0)`, "waiting for a connection")], "none"),
+  ts("Bytes to and from PostgreSQL (request path)", 0, 33, 12, 7, [
+    t(`sum(rate(db_client_operation_npgsql_bytes_written_total{${POOL}}[30s]))`, "written (queries)"),
+    t(`sum(rate(db_client_operation_npgsql_bytes_read_total{${POOL}}[30s]))`, "read (results)")], "Bps"),
   ts("Posting attempts and outcomes", 12, 25, 12, 8, [
     t("sum by (result) (rate(ledger_posting_attempts_total[30s]))", "attempt {{result}}"),
     t("sum by (outcome) (rate(ledger_posting_outcomes_total[30s]))", "outcome {{outcome}}")], "ops"),

@@ -1,0 +1,17 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.6.5">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>SloChaosLab.AppHost</RootNamespace>
+    <UserSecretsId>slo-chaos-lab-apphost</UserSecretsId>
+    <!-- The AppHost is a dev-time orchestrator; it is never packaged or shipped. -->
+    <IsPackable>false</IsPackable>
+    <!-- ASPIRE010: the optional Aspire CLI bundle is not used; `dotnet run` on the AppHost is the supported entry point here. -->
+    <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SloChaosLab.Api\SloChaosLab.Api.csproj" />
+  </ItemGroup>
+
+</Project>

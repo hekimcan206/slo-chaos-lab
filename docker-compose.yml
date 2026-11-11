@@ -1,0 +1,144 @@
+# `docker compose up` runs the whole lab with zero manual steps:
+#   postgres          least-privilege roles (deploy/postgres/init); data on tmpfs, so every `up` starts clean
+#   toxiproxy         sits between the service and PostgreSQL; the chaos runner injects faults through its API
+#   api               the ledger service; requests reach PostgreSQL only through toxiproxy, migrations go direct
+#   prometheus        receives the service's metrics over OTLP, evaluates the SLO and burn-rate rules
+#   grafana           the SLO dashboard (provisioned, read-only): http://localhost:58300
+#   aspire-dashboard  traces and structured logs: http://localhost:58388
+#   demo              steady load, then a full partition; exits 0 once the page-level burn-rate alert fires
+# LAB_PROFILE selects the service configuration under test: `hardened` (default, all fixes) or `baseline`
+# (the configuration the "before" runs measured). See docs/experiments.md.
+name: slo-chaos-lab
+
+x-build: &build
+  context: .
+  dockerfile: Dockerfile
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ledger
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres-dev-only}
+      MIGRATOR_PASSWORD: ${MIGRATOR_PASSWORD:-migrator-dev-only}
+      APP_PASSWORD: ${APP_PASSWORD:-app-dev-only}
+    command: ["postgres", "-c", "max_connections=200"]
+    volumes:
+      - ./deploy/postgres/init:/docker-entrypoint-initdb.d:ro
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ledger"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.12.0
+    command: ["-host=0.0.0.0", "-config=/config/toxiproxy.json"]
+    volumes:
+      - ./deploy/toxiproxy:/config:ro
+    ports:
+      # Admin API on loopback only: anyone who can reach it can break the database link.
+      - "127.0.0.1:${TOXIPROXY_PORT:-58474}:8474"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    image: slo-chaos-lab-api:local
+    build:
+      <<: *build
+      target: api
+    ports:
+      - "127.0.0.1:${API_PORT:-58380}:8080"
+    environment:
+      ConnectionStrings__Default: Host=toxiproxy;Port=15432;Database=ledger;Username=ledger_app;Password=${APP_PASSWORD:-app-dev-only}
+      ConnectionStrings__Migrator: Host=postgres;Database=ledger;Username=ledger_migrator;Password=${MIGRATOR_PASSWORD:-migrator-dev-only}
+      Database__MigrateOnStartup: "true"
+      Lab__Profile: ${LAB_PROFILE:-hardened}
+      OpenApi__Enabled: "true"
+      OTEL_SERVICE_NAME: ledger-api
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
+      Prometheus__OtlpEndpoint: http://prometheus:9090/api/v1/otlp/v1/metrics
+    depends_on:
+      postgres:
+        condition: service_healthy
+      toxiproxy:
+        condition: service_started
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-otlp-receiver
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+    volumes:
+      - ./deploy/prometheus:/etc/prometheus:ro
+    tmpfs:
+      # Fresh TSDB on every container start: each experiment's burn-rate windows begin empty (docs/experiments.md).
+      - /prometheus:uid=65534,gid=65534
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-58390}:9090"
+
+  grafana:
+    image: grafana/grafana:13.2.6
+    environment:
+      # Local lab only: anonymous viewers, no sign-up. Never expose this beyond localhost.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-grafana-dev-only}
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/slo.json
+    volumes:
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/grafana/dashboards:/etc/grafana/dashboards:ro
+    tmpfs:
+      - /var/lib/grafana:uid=472,gid=0
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-58300}:3000"
+    depends_on:
+      - prometheus
+
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.6
+    environment:
+      # Local lab only; never expose an unsecured dashboard beyond localhost.
+      DASHBOARD__FRONTEND__AUTHMODE: Unsecured
+      DASHBOARD__OTLP__AUTHMODE: Unsecured
+    ports:
+      - "127.0.0.1:${ASPIRE_DASHBOARD_PORT:-58388}:18888"
+
+  demo:
+    image: slo-chaos-lab-chaos:local
+    build:
+      <<: *build
+      target: chaos
+    command:
+      - smoke
+      - --api
+      - http://api:8080/
+      - --toxiproxy
+      - http://toxiproxy:8474/
+      - --prometheus
+      - http://prometheus:9090/
+      - --rate
+      - "20"
+      - --warmup
+      - "45"
+      - --deadline
+      - "240"
+    environment:
+      HOME: /tmp
+    depends_on:
+      api:
+        condition: service_started
+      prometheus:
+        condition: service_started
+    restart: "no"

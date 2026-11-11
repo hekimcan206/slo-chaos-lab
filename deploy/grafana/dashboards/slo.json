@@ -648,8 +648,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (state) (db_client_connections_usage)",
-          "legendFormat": "{{state}}",
+          "expr": "sum by (db_client_connection_state) (db_client_connection_count{db_client_connection_pool_name=\"request-path\"})",
+          "legendFormat": "{{db_client_connection_state}}",
           "refId": "K"
         },
         {
@@ -657,7 +657,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(db_client_connections_max)",
+          "expr": "sum(db_client_connection_max{db_client_connection_pool_name=\"request-path\"})",
           "legendFormat": "max",
           "refId": "K"
         },
@@ -666,7 +666,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(db_client_connections_pending_requests)",
+          "expr": "sum(db_client_connection_pending_requests{db_client_connection_pool_name=\"request-path\"}) or vector(0)",
           "legendFormat": "waiting for a connection",
           "refId": "K"
         }
@@ -704,6 +704,70 @@
     {
       "id": 11,
       "type": "timeseries",
+      "title": "Bytes to and from PostgreSQL (request path)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(db_client_operation_npgsql_bytes_written_total{db_client_connection_pool_name=\"request-path\"}[30s]))",
+          "legendFormat": "written (queries)",
+          "refId": "L"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(db_client_operation_npgsql_bytes_read_total{db_client_connection_pool_name=\"request-path\"}[30s]))",
+          "legendFormat": "read (results)",
+          "refId": "L"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
       "title": "Posting attempts and outcomes",
       "datasource": {
         "type": "prometheus",
@@ -723,7 +787,7 @@
           },
           "expr": "sum by (result) (rate(ledger_posting_attempts_total[30s]))",
           "legendFormat": "attempt {{result}}",
-          "refId": "L"
+          "refId": "M"
         },
         {
           "datasource": {
@@ -732,7 +796,7 @@
           },
           "expr": "sum by (outcome) (rate(ledger_posting_outcomes_total[30s]))",
           "legendFormat": "outcome {{outcome}}",
-          "refId": "L"
+          "refId": "M"
         }
       ],
       "options": {

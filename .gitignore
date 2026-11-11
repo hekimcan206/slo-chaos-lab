@@ -26,3 +26,7 @@ appsettings.*.local.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Experiment runner scratch output (raw NBomber reports and console logs)
+docs/results/nbomber/
+docs/results/*.log

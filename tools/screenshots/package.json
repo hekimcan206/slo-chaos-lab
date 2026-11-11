@@ -1,0 +1,9 @@
+{
+  "name": "slo-chaos-lab-screenshots",
+  "private": true,
+  "type": "module",
+  "description": "Captures the Grafana SLO dashboard for an experiment's time range (run inside the pinned Playwright image).",
+  "dependencies": {
+    "playwright": "1.64.1"
+  }
+}
