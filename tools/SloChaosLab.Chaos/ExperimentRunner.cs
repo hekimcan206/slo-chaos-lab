@@ -74,8 +74,9 @@ internal sealed class ExperimentRunner(RunSettings settings, TextWriter log)
         log.WriteLine($"[{settings.Experiment.Name}/{settings.Variant}] {settings.RatePerSecond} req/s for {total.TotalSeconds:0} s " +
                       $"(warm-up {warmup:0} s, fault {settings.Fault.TotalSeconds:0} s, recovery {settings.Recovery.TotalSeconds:0} s)");
 
-        var startedAt = DateTimeOffset.UtcNow;
         var generator = new LoadGenerator(settings.Api, settings.ClientTimeout);
+        await Prewarm.RunAsync(generator, settings.Api, 500, log, cancellationToken);
+        var startedAt = DateTimeOffset.UtcNow;
         var samples = await generator.RunAsync(
             settings.RatePerSecond,
             total,
@@ -102,7 +103,7 @@ internal sealed class ExperimentRunner(RunSettings settings, TextWriter log)
             server.Add(await ServerStatsAsync(prometheus, phase, startedAt, cancellationToken));
         }
 
-        var serverWhole = await ServerStatsAsync(prometheus, new Phase("run", 0, total.TotalSeconds + 15), startedAt, cancellationToken);
+        var serverWhole = await ServerStatsAsync(prometheus, new Phase("run", 0, total.TotalSeconds + 8), startedAt, cancellationToken);
         var serverBudget = SloCatalog.All.ToDictionary(
             s => s.Name,
             s =>
@@ -176,28 +177,37 @@ internal sealed class ExperimentRunner(RunSettings settings, TextWriter log)
 
     private static async Task<ServerPhaseStats> ServerStatsAsync(PrometheusClient prometheus, Phase phase, DateTimeOffset startedAt, CancellationToken cancellationToken)
     {
-        // increase() over the phase, evaluated at its end plus one push interval: a request is counted when it
-        // completes, so requests that hang past the phase show up in the next one, exactly as the alerts see them.
-        var at = startedAt + TimeSpan.FromSeconds(phase.ToSeconds + 5);
-        var range = $"{Math.Max(1, (int)Math.Round(phase.DurationSeconds))}s";
+        // Counter value at the phase end minus the value at its start, both read 7 s late (one 5 s push interval plus
+        // margin). Exact up to the push granularity, with none of increase()'s extrapolation. A request is counted
+        // when it completes, so requests that hang past a phase land in the next one, exactly as the alerts see them.
+        var from = startedAt + TimeSpan.FromSeconds(phase.FromSeconds + 7);
+        var to = startedAt + TimeSpan.FromSeconds(phase.ToSeconds + 7);
         var metric = SloCatalog.DurationMetric;
         var sel = SloCatalog.Selector;
 
-        var total = await prometheus.ScalarAsync($"sum(increase({metric}_count{{{sel}}}[{range}]))", at, cancellationToken) ?? 0;
-        var errors = await prometheus.ScalarAsync($"sum(increase({metric}_count{{{sel},http_response_status_code=~\"5..\"}}[{range}]))", at, cancellationToken) ?? 0;
-        var closed = await prometheus.ScalarAsync($"sum(increase({metric}_count{{{sel},http_response_status_code=\"499\"}}[{range}]))", at, cancellationToken) ?? 0;
+        async Task<double> Delta(string selector)
+        {
+            var promql = $"sum({selector})";
+            var end = await prometheus.ScalarAsync(promql, to, cancellationToken) ?? 0;
+            var start = await prometheus.ScalarAsync(promql, from, cancellationToken) ?? 0;
+            return Math.Max(0, end - start);
+        }
+
+        var total = await Delta($"{metric}_count{{{sel}}}");
+        var errors = await Delta($"{metric}_count{{{sel},http_response_status_code=~\"5..\"}}");
+        var closed = await Delta($"{metric}_count{{{sel},http_response_status_code=\"499\"}}");
         var latency = new Dictionary<string, double>(StringComparer.Ordinal);
         foreach (var slo in SloCatalog.All.Where(s => s.Kind == SliKind.Latency))
         {
             var le = PrometheusRuleGenerator.Number(slo.ThresholdSeconds!.Value);
-            var fast = await prometheus.ScalarAsync(
-                $"sum(increase({metric}_bucket{{{sel},http_response_status_code!~\"5..\",le=\"{le}\"}}[{range}]))", at, cancellationToken) ?? 0;
+            var fast = await Delta($"{metric}_bucket{{{sel},http_response_status_code!~\"5..\",le=\"{le}\"}}");
             var ok = total - errors;
             latency[slo.Name] = ok <= 0 ? 1 : Math.Min(1, fast / ok);
         }
 
         return new ServerPhaseStats(phase.Name, Math.Round(total), Math.Round(errors), Math.Round(closed), total <= 0 ? 1 : 1 - (errors / total), latency);
     }
+
 
     private static async Task<double> MaxAsync(PrometheusClient prometheus, string promql, DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken)
     {

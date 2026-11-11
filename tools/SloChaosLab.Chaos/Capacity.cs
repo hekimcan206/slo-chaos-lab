@@ -13,6 +13,7 @@ internal static class Capacity
         RunSettings settings, IReadOnlyList<int> rates, TimeSpan step, TextWriter log, CancellationToken cancellationToken)
     {
         var generator = new LoadGenerator(settings.Api, settings.ClientTimeout);
+        await Prewarm.RunAsync(generator, settings.Api, 500, log, cancellationToken);
         var steps = new List<CapacityStep>();
         foreach (var rate in rates)
         {

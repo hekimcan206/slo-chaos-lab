@@ -121,3 +121,26 @@ internal sealed class LoadGenerator(Uri apiBase, TimeSpan clientTimeout, int acc
         }
     }
 }
+
+internal static class Prewarm
+{
+    /// <summary>
+    /// Untimed requests before a measured run: JIT, the service's connection pool and the client's HTTP connections
+    /// are warm when the clock starts. Without this, the first second of every run measured process start-up.
+    /// </summary>
+    public static async Task RunAsync(LoadGenerator generator, Uri api, int requests, TextWriter log, CancellationToken cancellationToken)
+    {
+        using var http = new HttpClient { BaseAddress = api, Timeout = Timeout.InfiniteTimeSpan };
+        var ok = 0;
+        await Parallel.ForAsync(0, requests, new ParallelOptions { MaxDegreeOfParallelism = 16, CancellationToken = cancellationToken }, async (_, ct) =>
+        {
+            var sample = await generator.PostOnceAsync(http, 0, ct);
+            if (sample.IsSuccess)
+            {
+                Interlocked.Increment(ref ok);
+            }
+        });
+        log.WriteLine($"prewarm: {ok}/{requests} succeeded");
+        await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+    }
+}
