@@ -1,0 +1,13 @@
+# Prometheus receives the service's metrics over OTLP/HTTP (--web.enable-otlp-receiver) instead of scraping it:
+# the service pushes every 5 s, rules are evaluated every 5 s. Short intervals suit a lab whose experiments last
+# minutes; a production setup would use 15-60 s and the same rules.
+global:
+  evaluation_interval: 5s
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+otlp:
+  # Keep service.name / service.instance.id as job / instance (the default) and also expose these as labels.
+  promote_resource_attributes:
+    - service.version

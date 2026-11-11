@@ -1,0 +1,349 @@
+# GENERATED FILE. Do not edit by hand: change src/SloChaosLab.Slo/SloCatalog.cs and run
+#   dotnet run --project tools/SloChaosLab.Chaos -- generate-rules
+# A golden test fails when this file and the catalog disagree; deploy/prometheus/tests holds promtool tests.
+#
+# Multiwindow, multi-burn-rate alerts: Google SRE Workbook, ch. 5 "Alerting on SLOs"
+# (https://sre.google/workbook/alerting-on-slos/). An alert fires only when both its long and its short
+# window burn faster than the threshold. No `for:` clause: the short window already filters blips, and a
+# `for:` would only delay detection.
+groups:
+  - name: slo-ledger-post-availability
+    rules:
+      - record: slo:objective:ratio
+        expr: vector(0.999)
+        labels:
+          slo: ledger-post-availability
+      - record: slo:sli_error:ratio_rate5m
+        expr: (sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code=~"5.."}[5m])) or vector(0)) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST"}[5m]))
+        labels:
+          slo: ledger-post-availability
+      - record: slo:sli_error:ratio_rate30m
+        expr: (sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code=~"5.."}[30m])) or vector(0)) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST"}[30m]))
+        labels:
+          slo: ledger-post-availability
+      - record: slo:sli_error:ratio_rate1h
+        expr: (sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code=~"5.."}[1h])) or vector(0)) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST"}[1h]))
+        labels:
+          slo: ledger-post-availability
+      - record: slo:sli_error:ratio_rate6h
+        expr: (sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code=~"5.."}[6h])) or vector(0)) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST"}[6h]))
+        labels:
+          slo: ledger-post-availability
+      - record: slo:sli_error:ratio_rate3d
+        expr: (sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code=~"5.."}[3d])) or vector(0)) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST"}[3d]))
+        labels:
+          slo: ledger-post-availability
+      - record: slo:sli_error:ratio_rate30d
+        expr: (sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code=~"5.."}[30d])) or vector(0)) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST"}[30d]))
+        labels:
+          slo: ledger-post-availability
+      - record: slo:burn_rate:rate5m
+        expr: slo:sli_error:ratio_rate5m{slo="ledger-post-availability"} / 0.001
+        labels:
+          slo: ledger-post-availability
+      - record: slo:burn_rate:rate30m
+        expr: slo:sli_error:ratio_rate30m{slo="ledger-post-availability"} / 0.001
+        labels:
+          slo: ledger-post-availability
+      - record: slo:burn_rate:rate1h
+        expr: slo:sli_error:ratio_rate1h{slo="ledger-post-availability"} / 0.001
+        labels:
+          slo: ledger-post-availability
+      - record: slo:burn_rate:rate6h
+        expr: slo:sli_error:ratio_rate6h{slo="ledger-post-availability"} / 0.001
+        labels:
+          slo: ledger-post-availability
+      - record: slo:burn_rate:rate3d
+        expr: slo:sli_error:ratio_rate3d{slo="ledger-post-availability"} / 0.001
+        labels:
+          slo: ledger-post-availability
+      - record: slo:burn_rate:rate30d
+        expr: slo:sli_error:ratio_rate30d{slo="ledger-post-availability"} / 0.001
+        labels:
+          slo: ledger-post-availability
+      - record: slo:error_budget_remaining:ratio
+        expr: 1 - slo:burn_rate:rate30d{slo="ledger-post-availability"}
+        labels:
+          slo: ledger-post-availability
+      - alert: LedgerPostAvailabilityFastBurn
+        expr: slo:burn_rate:rate1h{slo="ledger-post-availability"} > 14.4 and slo:burn_rate:rate5m{slo="ledger-post-availability"} > 14.4
+        labels:
+          severity: page
+          slo: ledger-post-availability
+          long_window: 1h
+          short_window: 5m
+        annotations:
+          summary: "ledger-post-availability: error budget burning faster than 14.4x over 1h and 5m"
+          description: "99.9% of journal-entry posts do not fail with a 5xx. Burn rate over 1h: {{ $value | printf \"%.1f\" }}x. At 14.4x, 2% of the 30-day budget is gone within 1h."
+          runbook_url: "https://github.com/hekimcan206/slo-chaos-lab/blob/main/docs/slo.md#runbook"
+      - alert: LedgerPostAvailabilitySlowBurn
+        expr: slo:burn_rate:rate6h{slo="ledger-post-availability"} > 6 and slo:burn_rate:rate30m{slo="ledger-post-availability"} > 6
+        labels:
+          severity: page
+          slo: ledger-post-availability
+          long_window: 6h
+          short_window: 30m
+        annotations:
+          summary: "ledger-post-availability: error budget burning faster than 6x over 6h and 30m"
+          description: "99.9% of journal-entry posts do not fail with a 5xx. Burn rate over 6h: {{ $value | printf \"%.1f\" }}x. At 6x, 5% of the 30-day budget is gone within 6h."
+          runbook_url: "https://github.com/hekimcan206/slo-chaos-lab/blob/main/docs/slo.md#runbook"
+      - alert: LedgerPostAvailabilityBudgetErosion
+        expr: slo:burn_rate:rate3d{slo="ledger-post-availability"} > 1 and slo:burn_rate:rate6h{slo="ledger-post-availability"} > 1
+        labels:
+          severity: ticket
+          slo: ledger-post-availability
+          long_window: 3d
+          short_window: 6h
+        annotations:
+          summary: "ledger-post-availability: error budget burning faster than 1x over 3d and 6h"
+          description: "99.9% of journal-entry posts do not fail with a 5xx. Burn rate over 3d: {{ $value | printf \"%.1f\" }}x. At 1x, 10% of the 30-day budget is gone within 3d."
+          runbook_url: "https://github.com/hekimcan206/slo-chaos-lab/blob/main/docs/slo.md#runbook"
+  - name: slo-ledger-post-latency-p50
+    rules:
+      - record: slo:objective:ratio
+        expr: vector(0.5)
+        labels:
+          slo: ledger-post-latency-p50
+      - record: slo:sli_error:ratio_rate5m
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.025"}[5m])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[5m]))
+        labels:
+          slo: ledger-post-latency-p50
+      - record: slo:sli_error:ratio_rate30m
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.025"}[30m])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[30m]))
+        labels:
+          slo: ledger-post-latency-p50
+      - record: slo:sli_error:ratio_rate1h
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.025"}[1h])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[1h]))
+        labels:
+          slo: ledger-post-latency-p50
+      - record: slo:sli_error:ratio_rate6h
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.025"}[6h])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[6h]))
+        labels:
+          slo: ledger-post-latency-p50
+      - record: slo:sli_error:ratio_rate3d
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.025"}[3d])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[3d]))
+        labels:
+          slo: ledger-post-latency-p50
+      - record: slo:sli_error:ratio_rate30d
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.025"}[30d])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[30d]))
+        labels:
+          slo: ledger-post-latency-p50
+      - record: slo:burn_rate:rate5m
+        expr: slo:sli_error:ratio_rate5m{slo="ledger-post-latency-p50"} / 0.5
+        labels:
+          slo: ledger-post-latency-p50
+      - record: slo:burn_rate:rate30m
+        expr: slo:sli_error:ratio_rate30m{slo="ledger-post-latency-p50"} / 0.5
+        labels:
+          slo: ledger-post-latency-p50
+      - record: slo:burn_rate:rate1h
+        expr: slo:sli_error:ratio_rate1h{slo="ledger-post-latency-p50"} / 0.5
+        labels:
+          slo: ledger-post-latency-p50
+      - record: slo:burn_rate:rate6h
+        expr: slo:sli_error:ratio_rate6h{slo="ledger-post-latency-p50"} / 0.5
+        labels:
+          slo: ledger-post-latency-p50
+      - record: slo:burn_rate:rate3d
+        expr: slo:sli_error:ratio_rate3d{slo="ledger-post-latency-p50"} / 0.5
+        labels:
+          slo: ledger-post-latency-p50
+      - record: slo:burn_rate:rate30d
+        expr: slo:sli_error:ratio_rate30d{slo="ledger-post-latency-p50"} / 0.5
+        labels:
+          slo: ledger-post-latency-p50
+      - record: slo:error_budget_remaining:ratio
+        expr: 1 - slo:burn_rate:rate30d{slo="ledger-post-latency-p50"}
+        labels:
+          slo: ledger-post-latency-p50
+    # No burn-rate alerts: a 50% budget cannot be burned at 14.4x. Charted only.
+  - name: slo-ledger-post-latency-p95
+    rules:
+      - record: slo:objective:ratio
+        expr: vector(0.95)
+        labels:
+          slo: ledger-post-latency-p95
+      - record: slo:sli_error:ratio_rate5m
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.1"}[5m])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[5m]))
+        labels:
+          slo: ledger-post-latency-p95
+      - record: slo:sli_error:ratio_rate30m
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.1"}[30m])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[30m]))
+        labels:
+          slo: ledger-post-latency-p95
+      - record: slo:sli_error:ratio_rate1h
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.1"}[1h])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[1h]))
+        labels:
+          slo: ledger-post-latency-p95
+      - record: slo:sli_error:ratio_rate6h
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.1"}[6h])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[6h]))
+        labels:
+          slo: ledger-post-latency-p95
+      - record: slo:sli_error:ratio_rate3d
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.1"}[3d])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[3d]))
+        labels:
+          slo: ledger-post-latency-p95
+      - record: slo:sli_error:ratio_rate30d
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.1"}[30d])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[30d]))
+        labels:
+          slo: ledger-post-latency-p95
+      - record: slo:burn_rate:rate5m
+        expr: slo:sli_error:ratio_rate5m{slo="ledger-post-latency-p95"} / 0.05
+        labels:
+          slo: ledger-post-latency-p95
+      - record: slo:burn_rate:rate30m
+        expr: slo:sli_error:ratio_rate30m{slo="ledger-post-latency-p95"} / 0.05
+        labels:
+          slo: ledger-post-latency-p95
+      - record: slo:burn_rate:rate1h
+        expr: slo:sli_error:ratio_rate1h{slo="ledger-post-latency-p95"} / 0.05
+        labels:
+          slo: ledger-post-latency-p95
+      - record: slo:burn_rate:rate6h
+        expr: slo:sli_error:ratio_rate6h{slo="ledger-post-latency-p95"} / 0.05
+        labels:
+          slo: ledger-post-latency-p95
+      - record: slo:burn_rate:rate3d
+        expr: slo:sli_error:ratio_rate3d{slo="ledger-post-latency-p95"} / 0.05
+        labels:
+          slo: ledger-post-latency-p95
+      - record: slo:burn_rate:rate30d
+        expr: slo:sli_error:ratio_rate30d{slo="ledger-post-latency-p95"} / 0.05
+        labels:
+          slo: ledger-post-latency-p95
+      - record: slo:error_budget_remaining:ratio
+        expr: 1 - slo:burn_rate:rate30d{slo="ledger-post-latency-p95"}
+        labels:
+          slo: ledger-post-latency-p95
+      - alert: LedgerPostLatencyP95FastBurn
+        expr: slo:burn_rate:rate1h{slo="ledger-post-latency-p95"} > 14.4 and slo:burn_rate:rate5m{slo="ledger-post-latency-p95"} > 14.4
+        labels:
+          severity: page
+          slo: ledger-post-latency-p95
+          long_window: 1h
+          short_window: 5m
+        annotations:
+          summary: "ledger-post-latency-p95: error budget burning faster than 14.4x over 1h and 5m"
+          description: "95% of successful journal-entry posts complete within 100 ms. Burn rate over 1h: {{ $value | printf \"%.1f\" }}x. At 14.4x, 2% of the 30-day budget is gone within 1h."
+          runbook_url: "https://github.com/hekimcan206/slo-chaos-lab/blob/main/docs/slo.md#runbook"
+      - alert: LedgerPostLatencyP95SlowBurn
+        expr: slo:burn_rate:rate6h{slo="ledger-post-latency-p95"} > 6 and slo:burn_rate:rate30m{slo="ledger-post-latency-p95"} > 6
+        labels:
+          severity: page
+          slo: ledger-post-latency-p95
+          long_window: 6h
+          short_window: 30m
+        annotations:
+          summary: "ledger-post-latency-p95: error budget burning faster than 6x over 6h and 30m"
+          description: "95% of successful journal-entry posts complete within 100 ms. Burn rate over 6h: {{ $value | printf \"%.1f\" }}x. At 6x, 5% of the 30-day budget is gone within 6h."
+          runbook_url: "https://github.com/hekimcan206/slo-chaos-lab/blob/main/docs/slo.md#runbook"
+      - alert: LedgerPostLatencyP95BudgetErosion
+        expr: slo:burn_rate:rate3d{slo="ledger-post-latency-p95"} > 1 and slo:burn_rate:rate6h{slo="ledger-post-latency-p95"} > 1
+        labels:
+          severity: ticket
+          slo: ledger-post-latency-p95
+          long_window: 3d
+          short_window: 6h
+        annotations:
+          summary: "ledger-post-latency-p95: error budget burning faster than 1x over 3d and 6h"
+          description: "95% of successful journal-entry posts complete within 100 ms. Burn rate over 3d: {{ $value | printf \"%.1f\" }}x. At 1x, 10% of the 30-day budget is gone within 3d."
+          runbook_url: "https://github.com/hekimcan206/slo-chaos-lab/blob/main/docs/slo.md#runbook"
+  - name: slo-ledger-post-latency-p99
+    rules:
+      - record: slo:objective:ratio
+        expr: vector(0.99)
+        labels:
+          slo: ledger-post-latency-p99
+      - record: slo:sli_error:ratio_rate5m
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.25"}[5m])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[5m]))
+        labels:
+          slo: ledger-post-latency-p99
+      - record: slo:sli_error:ratio_rate30m
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.25"}[30m])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[30m]))
+        labels:
+          slo: ledger-post-latency-p99
+      - record: slo:sli_error:ratio_rate1h
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.25"}[1h])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[1h]))
+        labels:
+          slo: ledger-post-latency-p99
+      - record: slo:sli_error:ratio_rate6h
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.25"}[6h])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[6h]))
+        labels:
+          slo: ledger-post-latency-p99
+      - record: slo:sli_error:ratio_rate3d
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.25"}[3d])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[3d]))
+        labels:
+          slo: ledger-post-latency-p99
+      - record: slo:sli_error:ratio_rate30d
+        expr: 1 - sum(rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5..",le="0.25"}[30d])) / sum(rate(http_server_request_duration_seconds_count{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[30d]))
+        labels:
+          slo: ledger-post-latency-p99
+      - record: slo:burn_rate:rate5m
+        expr: slo:sli_error:ratio_rate5m{slo="ledger-post-latency-p99"} / 0.01
+        labels:
+          slo: ledger-post-latency-p99
+      - record: slo:burn_rate:rate30m
+        expr: slo:sli_error:ratio_rate30m{slo="ledger-post-latency-p99"} / 0.01
+        labels:
+          slo: ledger-post-latency-p99
+      - record: slo:burn_rate:rate1h
+        expr: slo:sli_error:ratio_rate1h{slo="ledger-post-latency-p99"} / 0.01
+        labels:
+          slo: ledger-post-latency-p99
+      - record: slo:burn_rate:rate6h
+        expr: slo:sli_error:ratio_rate6h{slo="ledger-post-latency-p99"} / 0.01
+        labels:
+          slo: ledger-post-latency-p99
+      - record: slo:burn_rate:rate3d
+        expr: slo:sli_error:ratio_rate3d{slo="ledger-post-latency-p99"} / 0.01
+        labels:
+          slo: ledger-post-latency-p99
+      - record: slo:burn_rate:rate30d
+        expr: slo:sli_error:ratio_rate30d{slo="ledger-post-latency-p99"} / 0.01
+        labels:
+          slo: ledger-post-latency-p99
+      - record: slo:error_budget_remaining:ratio
+        expr: 1 - slo:burn_rate:rate30d{slo="ledger-post-latency-p99"}
+        labels:
+          slo: ledger-post-latency-p99
+      - alert: LedgerPostLatencyP99FastBurn
+        expr: slo:burn_rate:rate1h{slo="ledger-post-latency-p99"} > 14.4 and slo:burn_rate:rate5m{slo="ledger-post-latency-p99"} > 14.4
+        labels:
+          severity: page
+          slo: ledger-post-latency-p99
+          long_window: 1h
+          short_window: 5m
+        annotations:
+          summary: "ledger-post-latency-p99: error budget burning faster than 14.4x over 1h and 5m"
+          description: "99% of successful journal-entry posts complete within 250 ms. Burn rate over 1h: {{ $value | printf \"%.1f\" }}x. At 14.4x, 2% of the 30-day budget is gone within 1h."
+          runbook_url: "https://github.com/hekimcan206/slo-chaos-lab/blob/main/docs/slo.md#runbook"
+      - alert: LedgerPostLatencyP99SlowBurn
+        expr: slo:burn_rate:rate6h{slo="ledger-post-latency-p99"} > 6 and slo:burn_rate:rate30m{slo="ledger-post-latency-p99"} > 6
+        labels:
+          severity: page
+          slo: ledger-post-latency-p99
+          long_window: 6h
+          short_window: 30m
+        annotations:
+          summary: "ledger-post-latency-p99: error budget burning faster than 6x over 6h and 30m"
+          description: "99% of successful journal-entry posts complete within 250 ms. Burn rate over 6h: {{ $value | printf \"%.1f\" }}x. At 6x, 5% of the 30-day budget is gone within 6h."
+          runbook_url: "https://github.com/hekimcan206/slo-chaos-lab/blob/main/docs/slo.md#runbook"
+      - alert: LedgerPostLatencyP99BudgetErosion
+        expr: slo:burn_rate:rate3d{slo="ledger-post-latency-p99"} > 1 and slo:burn_rate:rate6h{slo="ledger-post-latency-p99"} > 1
+        labels:
+          severity: ticket
+          slo: ledger-post-latency-p99
+          long_window: 3d
+          short_window: 6h
+        annotations:
+          summary: "ledger-post-latency-p99: error budget burning faster than 1x over 3d and 6h"
+          description: "99% of successful journal-entry posts complete within 250 ms. Burn rate over 3d: {{ $value | printf \"%.1f\" }}x. At 1x, 10% of the 30-day budget is gone within 3d."
+          runbook_url: "https://github.com/hekimcan206/slo-chaos-lab/blob/main/docs/slo.md#runbook"
+  - name: slo-latency-quantiles
+    rules:
+      - record: slo:latency_seconds:p50_rate1m
+        expr: histogram_quantile(0.5, sum by (le) (rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[1m])))
+      - record: slo:latency_seconds:p95_rate1m
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[1m])))
+      - record: slo:latency_seconds:p99_rate1m
+        expr: histogram_quantile(0.99, sum by (le) (rate(http_server_request_duration_seconds_bucket{job="ledger-api",http_route="/api/v1/journal-entries",http_request_method="POST",http_response_status_code!~"5.."}[1m])))

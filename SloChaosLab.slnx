@@ -2,5 +2,6 @@
   <Folder Name="/src/">
     <Project Path="src/SloChaosLab.Api/SloChaosLab.Api.csproj" />
     <Project Path="src/SloChaosLab.Ledger/SloChaosLab.Ledger.csproj" />
+    <Project Path="src/SloChaosLab.Slo/SloChaosLab.Slo.csproj" />
   </Folder>
 </Solution>
