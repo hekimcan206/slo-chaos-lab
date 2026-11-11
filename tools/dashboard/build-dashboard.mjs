@@ -4,7 +4,7 @@ const SEL = 'job="ledger-api",http_route="/api/v1/journal-entries",http_request_
 const POOL = 'db_client_connection_pool_name="request-path"';
 let id = 1;
 const ds = { type: "prometheus", uid: "prometheus" };
-const t = (expr, legend) => ({ datasource: ds, expr, legendFormat: legend, refId: String.fromCharCode(64 + id % 26 + 1) });
+const t = (expr, legend) => ({ datasource: ds, expr, legendFormat: legend });
 const stat = (title, x, y, w, targets, unit, thresholds, decimals = 3) => ({
   id: id++, type: "stat", title, datasource: ds, gridPos: { x, y, w, h: 4 },
   targets, options: { reduceOptions: { calcs: ["lastNotNull"] }, colorMode: "background", graphMode: "area", textMode: "value_and_name" },
@@ -54,6 +54,9 @@ const panels = [
     t("sum by (result) (rate(ledger_posting_attempts_total[30s]))", "attempt {{result}}"),
     t("sum by (outcome) (rate(ledger_posting_outcomes_total[30s]))", "outcome {{outcome}}")], "ops"),
 ];
+// Grafana requires a unique refId per query within a panel.
+for (const p of panels) p.targets.forEach((q, i) => { q.refId = String.fromCharCode(65 + i); });
+
 const dashboard = {
   uid: "slo-ledger", title: "Ledger posting SLOs", tags: ["slo", "chaos"], timezone: "utc", schemaVersion: 39, version: 1,
   refresh: "5s", time: { from: "now-15m", to: "now" }, editable: false, graphTooltip: 1, panels,

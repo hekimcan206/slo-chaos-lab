@@ -38,7 +38,7 @@
           },
           "expr": "1 - slo:sli_error:ratio_rate5m{slo=\"ledger-post-availability\"}",
           "legendFormat": "availability",
-          "refId": "B"
+          "refId": "A"
         }
       ],
       "options": {
@@ -94,7 +94,7 @@
           },
           "expr": "1 - slo:sli_error:ratio_rate5m{slo=\"ledger-post-latency-p99\"}",
           "legendFormat": "<=250 ms",
-          "refId": "C"
+          "refId": "A"
         }
       ],
       "options": {
@@ -150,7 +150,7 @@
           },
           "expr": "slo:error_budget_remaining:ratio{slo=\"ledger-post-availability\"}",
           "legendFormat": "availability",
-          "refId": "D"
+          "refId": "A"
         },
         {
           "datasource": {
@@ -159,7 +159,7 @@
           },
           "expr": "slo:error_budget_remaining:ratio{slo=\"ledger-post-latency-p99\"}",
           "legendFormat": "latency p99",
-          "refId": "D"
+          "refId": "B"
         }
       ],
       "options": {
@@ -219,7 +219,7 @@
           },
           "expr": "count(ALERTS{alertstate=\"firing\"}) or vector(0)",
           "legendFormat": "firing",
-          "refId": "E"
+          "refId": "A"
         }
       ],
       "options": {
@@ -275,7 +275,7 @@
           },
           "expr": "sum by (http_response_status_code) (rate(http_server_request_duration_seconds_count{job=\"ledger-api\",http_route=\"/api/v1/journal-entries\",http_request_method=\"POST\"}[30s]))",
           "legendFormat": "{{http_response_status_code}}",
-          "refId": "F"
+          "refId": "A"
         }
       ],
       "options": {
@@ -330,7 +330,7 @@
           },
           "expr": "slo:latency_seconds:p50_rate1m",
           "legendFormat": "p50",
-          "refId": "G"
+          "refId": "A"
         },
         {
           "datasource": {
@@ -339,7 +339,7 @@
           },
           "expr": "slo:latency_seconds:p95_rate1m",
           "legendFormat": "p95",
-          "refId": "G"
+          "refId": "B"
         },
         {
           "datasource": {
@@ -348,7 +348,7 @@
           },
           "expr": "slo:latency_seconds:p99_rate1m",
           "legendFormat": "p99",
-          "refId": "G"
+          "refId": "C"
         }
       ],
       "options": {
@@ -412,7 +412,7 @@
           },
           "expr": "slo:burn_rate:rate5m{slo=\"ledger-post-availability\"}",
           "legendFormat": "5m",
-          "refId": "H"
+          "refId": "A"
         },
         {
           "datasource": {
@@ -421,7 +421,7 @@
           },
           "expr": "slo:burn_rate:rate30m{slo=\"ledger-post-availability\"}",
           "legendFormat": "30m",
-          "refId": "H"
+          "refId": "B"
         },
         {
           "datasource": {
@@ -430,7 +430,7 @@
           },
           "expr": "slo:burn_rate:rate1h{slo=\"ledger-post-availability\"}",
           "legendFormat": "1h",
-          "refId": "H"
+          "refId": "C"
         },
         {
           "datasource": {
@@ -439,7 +439,7 @@
           },
           "expr": "slo:burn_rate:rate6h{slo=\"ledger-post-availability\"}",
           "legendFormat": "6h",
-          "refId": "H"
+          "refId": "D"
         }
       ],
       "options": {
@@ -506,7 +506,7 @@
           },
           "expr": "slo:burn_rate:rate5m{slo=\"ledger-post-latency-p99\"}",
           "legendFormat": "5m",
-          "refId": "I"
+          "refId": "A"
         },
         {
           "datasource": {
@@ -515,7 +515,7 @@
           },
           "expr": "slo:burn_rate:rate30m{slo=\"ledger-post-latency-p99\"}",
           "legendFormat": "30m",
-          "refId": "I"
+          "refId": "B"
         },
         {
           "datasource": {
@@ -524,7 +524,7 @@
           },
           "expr": "slo:burn_rate:rate1h{slo=\"ledger-post-latency-p99\"}",
           "legendFormat": "1h",
-          "refId": "I"
+          "refId": "C"
         },
         {
           "datasource": {
@@ -533,7 +533,7 @@
           },
           "expr": "slo:burn_rate:rate6h{slo=\"ledger-post-latency-p99\"}",
           "legendFormat": "6h",
-          "refId": "I"
+          "refId": "D"
         }
       ],
       "options": {
@@ -599,7 +599,7 @@
           },
           "expr": "ALERTS{alertstate=\"firing\"}",
           "legendFormat": "{{alertname}}",
-          "refId": "K"
+          "refId": "A"
         }
       ],
       "options": {
@@ -650,7 +650,7 @@
           },
           "expr": "sum by (db_client_connection_state) (db_client_connection_count{db_client_connection_pool_name=\"request-path\"})",
           "legendFormat": "{{db_client_connection_state}}",
-          "refId": "K"
+          "refId": "A"
         },
         {
           "datasource": {
@@ -659,7 +659,7 @@
           },
           "expr": "sum(db_client_connection_max{db_client_connection_pool_name=\"request-path\"})",
           "legendFormat": "max",
-          "refId": "K"
+          "refId": "B"
         },
         {
           "datasource": {
@@ -668,7 +668,7 @@
           },
           "expr": "sum(db_client_connection_pending_requests{db_client_connection_pool_name=\"request-path\"}) or vector(0)",
           "legendFormat": "waiting for a connection",
-          "refId": "K"
+          "refId": "C"
         }
       ],
       "options": {
@@ -723,7 +723,7 @@
           },
           "expr": "sum(rate(db_client_operation_npgsql_bytes_written_total{db_client_connection_pool_name=\"request-path\"}[30s]))",
           "legendFormat": "written (queries)",
-          "refId": "L"
+          "refId": "A"
         },
         {
           "datasource": {
@@ -732,7 +732,7 @@
           },
           "expr": "sum(rate(db_client_operation_npgsql_bytes_read_total{db_client_connection_pool_name=\"request-path\"}[30s]))",
           "legendFormat": "read (results)",
-          "refId": "L"
+          "refId": "B"
         }
       ],
       "options": {
@@ -787,7 +787,7 @@
           },
           "expr": "sum by (result) (rate(ledger_posting_attempts_total[30s]))",
           "legendFormat": "attempt {{result}}",
-          "refId": "M"
+          "refId": "A"
         },
         {
           "datasource": {
@@ -796,7 +796,7 @@
           },
           "expr": "sum by (outcome) (rate(ledger_posting_outcomes_total[30s]))",
           "legendFormat": "outcome {{outcome}}",
-          "refId": "M"
+          "refId": "B"
         }
       ],
       "options": {

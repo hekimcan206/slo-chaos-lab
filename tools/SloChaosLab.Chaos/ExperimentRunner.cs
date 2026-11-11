@@ -177,11 +177,11 @@ internal sealed class ExperimentRunner(RunSettings settings, TextWriter log)
 
     private static async Task<ServerPhaseStats> ServerStatsAsync(PrometheusClient prometheus, Phase phase, DateTimeOffset startedAt, CancellationToken cancellationToken)
     {
-        // Counter value at the phase end minus the value at its start, both read 7 s late (one 5 s push interval plus
+        // Counter value at the phase end minus the value at its start, both read 2 s late (one 1 s push interval plus
         // margin). Exact up to the push granularity, with none of increase()'s extrapolation. A request is counted
         // when it completes, so requests that hang past a phase land in the next one, exactly as the alerts see them.
-        var from = startedAt + TimeSpan.FromSeconds(phase.FromSeconds + 7);
-        var to = startedAt + TimeSpan.FromSeconds(phase.ToSeconds + 7);
+        var from = startedAt + TimeSpan.FromSeconds(phase.FromSeconds + 2);
+        var to = startedAt + TimeSpan.FromSeconds(phase.ToSeconds + 2);
         var metric = SloCatalog.DurationMetric;
         var sel = SloCatalog.Selector;
 

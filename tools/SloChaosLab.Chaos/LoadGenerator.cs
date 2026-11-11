@@ -53,6 +53,8 @@ internal sealed class LoadGenerator(Uri apiBase, TimeSpan clientTimeout, int acc
                     : Response.Fail(statusCode: code);
             })
             .WithoutWarmUp()
+            // NBomber stops a scenario after 5,000 failures by default; a partition fails every request by design.
+            .WithMaxFailCount(int.MaxValue)
             .WithLoadSimulations(Simulation.Inject(ratePerSecond, TimeSpan.FromSeconds(1), duration));
 
         using var sideCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
