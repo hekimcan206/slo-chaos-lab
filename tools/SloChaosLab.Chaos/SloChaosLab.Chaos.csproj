@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>SloChaosLab.Chaos</RootNamespace>
+    <AssemblyName>chaos</AssemblyName>
+    <Description>Experiment runner: fixed-rate NBomber load, Toxiproxy fault schedule, SLO read-back from Prometheus.</Description>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NBomber" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SloChaosLab.Slo\SloChaosLab.Slo.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SloChaosLab.UnitTests" />
+  </ItemGroup>
+
+</Project>
