@@ -1,0 +1,129 @@
+ Container slo-chaos-lab-demo-run-4f64df18c00b Creating 
+ Container slo-chaos-lab-demo-run-4f64df18c00b Created 
+service ready at http://api:8080/
+[partition/after] 50 req/s for 270 s (warm-up 60 s, fault 120 s, recovery 90 s)
+prewarm: 500/500 succeeded
+  _   _   ____                        _                        __   
+ | \ | | | __ )    ___    _ __ ___   | |__     ___   _ __     / /_  
+ |  \| | |  _ \   / _ \  | '_ ` _ \  | '_ \   / _ \ | '__|   | '_ \ 
+ | |\  | | |_) | | (_) | | | | | | | | |_) | |  __/ | |      | (_) |
+ |_| \_| |____/   \___/  |_| |_| |_| |_.__/   \___| |_|       \___/ 
+                                                                    
+Welcome to the NBomber community!
+Documentation: https://nbomber.com/docs/getting-started/overview
+Blog: https://nbomber.com/blog
+Roadmap: https://nbomber.com/docs/getting-started/roadmap
+GitHub Discussion: https://github.com/PragmaticFlow/NBomber/discussions
+GitHub Issues: https://github.com/PragmaticFlow/NBomber/issues
+Docker Hub: https://hub.docker.com/u/nbomberdocker
+LinkedIn: https://www.linkedin.com/company/nbomber
+Slack: https://nbomberworkspace.slack.com
+
+09:15:26 [WRN] Server GC mode is not enabled. For better performance and more accurate load 
+test results, enable it by adding <ServerGarbageCollection>true</ServerGarbageCollection> to your .csproj file, or #:property ServerGarbageCollection=true to the top of your .cs file script. Docs: https://learn.microsoft.com/en-us/dotnet/core/runtime-config/garbage-collector#w
+orkstation-vs-server
+09:15:26 [INF] NBomber "6.7.1" started a new session: "2026-11-12_09-15-26_826fa2e3"
+09:15:26 [INF] NBomber started as single node
+09:15:26 [INF] License validation....
+09:15:26 [WRN] THIS VERSION IS FREE ONLY FOR PERSONAL USE. You can't use it for an 
+organization.
+09:15:26 [INF] Reports folder: "/results/nbomber/partition-after"
+09:15:26 [INF] Plugins: no plugins were loaded
+09:15:26 [INF] Reporting sinks: no reporting sinks were loaded
+09:15:26 [INF] Starting init...
+09:15:26 [INF] Target scenarios: "post_journal_entry"
+09:15:26 [INF] Init finished
+09:15:26 [INF] Starting bombing...
+  t=  60.0s  + db-blackhole-up
+  t=  60.0s  + db-blackhole-down
+  t= 180.0s  - db-blackhole-up
+  t= 180.0s  - db-blackhole-down
+09:19:59 [INF] Stopping scenarios...
+09:19:59 [INF] Calculating final statistics...
+
+────────────────────────────────── test info ───────────────────────────────────
+
+test suite: slo-chaos-lab
+test name: nbomber_default_test_name
+session id: 2026-11-12_09-15-26_826fa2e3
+
+──────────────────────────────── scenario stats ────────────────────────────────
+
+scenario: post_journal_entry
+  - duration: 00:04:30
+
+load simulations: 
+  - inject, rate: 50, interval: 00:00:01, during: 00:04:30
+
+┌─────────────────────────┬────────────────────────────────────────────────────┐
+│      scenario and steps │ ok stats                                           │
+├─────────────────────────┼────────────────────────────────────────────────────┤
+│           scenario name │ post_journal_entry                                 │
+│                requests │ total = 13500, ok = 7167, fail = 6333              │
+│           RPS (req/sec) │ total = 50/s, ok = 26.54/s, fail = 23.46/s         │
+│            latency (ms) │ min = 2.17, mean = 8.34, max = 1799.05, StdDev =   │
+│                         │ 68.75                                              │
+│ latency percentile (ms) │ p50 = 4.14, p75 = 5.22, p95 = 8.98, p99 = 20.99    │
+└─────────────────────────┴────────────────────────────────────────────────────┘
+┌─────────────────────────┬────────────────────────────────────────────────────┐
+│      scenario and steps │ failures stats                                     │
+├─────────────────────────┼────────────────────────────────────────────────────┤
+│           scenario name │ post_journal_entry                                 │
+│                requests │ total = 13500, ok = 7167, fail = 6333              │
+│           RPS (req/sec) │ total = 50/s, ok = 26.54/s, fail = 23.46/s         │
+│            latency (ms) │ min = 0.33, mean = 134.99, max = 2432.05, StdDev = │
+│                         │ 457.48                                             │
+│ latency percentile (ms) │ p50 = 1.05, p75 = 1.43, p95 = 1502.21, p99 =       │
+│                         │ 2010.11                                            │
+└─────────────────────────┴────────────────────────────────────────────────────┘
+
+status codes for scenario: post_journal_entry
+┌─────────────┬───────┬─────────┐
+│ status code │ count │ message │
+├─────────────┼───────┼─────────┤
+│         201 │ 7167  │         │
+│         503 │ 6141  │         │
+│           0 │  192  │         │
+└─────────────┴───────┴─────────┘
+
+
+09:19:59 [INF] Reports saved in folder: "/results/nbomber/partition-after"
+09:19:59 [WRN] THIS VERSION IS FREE ONLY FOR PERSONAL USE. You can't use it for an 
+organization.
+### Partition: service and database cannot exchange a single byte (after)
+
+50 req/s fixed, client timeout 2 s; warm-up 60 s, fault 120 s, recovery 90 s. Fault: Toxiproxy `timeout` toxic, timeout=0 (black hole, connections never closed), upstream and downstream.
+
+Client-observed:
+
+| phase | requests | 2xx | 5xx | timeouts | availability | p50 ms | p95 ms | p99 ms | p99 all ms | <=250 ms |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| warmup | 2999 | 2999 | 0 | 0 | 100 % | 4.2 | 8.9 | 10.9 | 10.9 | 100 % |
+| fault | 6001 | 1 | 5900 | 100 | 0.017 % | 3.9 | 3.9 | 3.9 | 2001 | 100 % |
+| recovery | 4500 | 4167 | 241 | 92 | 92.6 % | 4.0 | 9.0 | 58.3 | 2016 | 99.544 % |
+
+Server-side SLI (Prometheus, counted when the request completes):
+
+| phase | requests | 5xx | 499 (client gone) | availability | <=100 ms | <=250 ms |
+|---|---:|---:|---:|---:|---:|---:|
+| warmup | 2944 | 0 | 0 | 100 % | 100 % | 100 % |
+| fault | 6061 | 5997 | 64 | 1.056 % | 0 % | 0 % |
+| recovery | 4439 | 217 | 55 | 95.112 % | 97.845 % | 98.247 % |
+
+| SLO | budget consumed (client) | budget consumed (server) | max burn 5m | max burn 1h |
+|---|---:|---:|---:|---:|
+| ledger-post-availability | 4.887 % | 4.795 % | 663.7x | 663.7x |
+| ledger-post-latency-p50 | 0 % | 0 % | 0x | 0x |
+| ledger-post-latency-p95 | 0.001 % | 0.002 % | 0.3x | 0.3x |
+| ledger-post-latency-p99 | 0.001 % | 0.011 % | 1.4x | 1.4x |
+
+| alert | fired after fault start (measured) | last firing after fault end | steady-state model |
+|---|---:|---:|---:|
+| LedgerPostAvailabilityBudgetErosion | 10 s | 105 s | - |
+| LedgerPostAvailabilityFastBurn | 10 s | 105 s | 52 s |
+| LedgerPostAvailabilitySlowBurn | 10 s | 105 s | - |
+| LedgerPostLatencyP99BudgetErosion | 10 s | 105 s | - |
+
+Recovered (10 s of all-2xx under 250 ms) 4 s after the fault ended. Host: 16 logical CPUs, Ubuntu 24.04.5 LTS, .NET 10.0.15.
+
+wrote /results/partition-after.json

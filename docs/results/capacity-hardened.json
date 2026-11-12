@@ -1,0 +1,122 @@
+[
+  {
+    "offeredRatePerSecond": 50,
+    "stats": {
+      "phase": "50 req/s",
+      "durationSeconds": 35,
+      "requests": 1752,
+      "succeeded": 1752,
+      "serverErrors": 0,
+      "clientTimeouts": 0,
+      "transportErrors": 0,
+      "availability": 1,
+      "throughputPerSecond": 50.05714285714286,
+      "p50Ms": 4.3954,
+      "p95Ms": 8.2778,
+      "p99Ms": 10.9091,
+      "p99AllMs": 10.9091,
+      "maxMs": 15.9315,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 1,
+        "ledger-post-latency-p95": 1,
+        "ledger-post-latency-p99": 1
+      }
+    }
+  },
+  {
+    "offeredRatePerSecond": 100,
+    "stats": {
+      "phase": "100 req/s",
+      "durationSeconds": 35,
+      "requests": 3500,
+      "succeeded": 3500,
+      "serverErrors": 0,
+      "clientTimeouts": 0,
+      "transportErrors": 0,
+      "availability": 1,
+      "throughputPerSecond": 100,
+      "p50Ms": 4.1394,
+      "p95Ms": 7.1096,
+      "p99Ms": 36.7247,
+      "p99AllMs": 36.7247,
+      "maxMs": 657.0506,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9885714285714285,
+        "ledger-post-latency-p95": 0.9911428571428571,
+        "ledger-post-latency-p99": 0.9951428571428571
+      }
+    }
+  },
+  {
+    "offeredRatePerSecond": 200,
+    "stats": {
+      "phase": "200 req/s",
+      "durationSeconds": 35,
+      "requests": 7000,
+      "succeeded": 6943,
+      "serverErrors": 57,
+      "clientTimeouts": 0,
+      "transportErrors": 0,
+      "availability": 0.9918571428571429,
+      "throughputPerSecond": 198.37142857142857,
+      "p50Ms": 4.2653,
+      "p95Ms": 21.5862,
+      "p99Ms": 360.2075,
+      "p99AllMs": 357.5732,
+      "maxMs": 652.7276,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9510298142013539,
+        "ledger-post-latency-p95": 0.9763790868500648,
+        "ledger-post-latency-p99": 0.9818522252628546
+      }
+    }
+  },
+  {
+    "offeredRatePerSecond": 400,
+    "stats": {
+      "phase": "400 req/s",
+      "durationSeconds": 35,
+      "requests": 14000,
+      "succeeded": 14000,
+      "serverErrors": 0,
+      "clientTimeouts": 0,
+      "transportErrors": 0,
+      "availability": 1,
+      "throughputPerSecond": 400,
+      "p50Ms": 4.6403,
+      "p95Ms": 15.5142,
+      "p99Ms": 28.5501,
+      "p99AllMs": 28.5501,
+      "maxMs": 79.7683,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9863571428571428,
+        "ledger-post-latency-p95": 1,
+        "ledger-post-latency-p99": 1
+      }
+    }
+  },
+  {
+    "offeredRatePerSecond": 800,
+    "stats": {
+      "phase": "800 req/s",
+      "durationSeconds": 35,
+      "requests": 28000,
+      "succeeded": 27991,
+      "serverErrors": 9,
+      "clientTimeouts": 0,
+      "transportErrors": 0,
+      "availability": 0.9996785714285714,
+      "throughputPerSecond": 799.7428571428571,
+      "p50Ms": 5.3353,
+      "p95Ms": 11.4184,
+      "p99Ms": 23.3314,
+      "p99AllMs": 23.3016,
+      "maxMs": 39.0788,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9926047658175843,
+        "ledger-post-latency-p95": 1,
+        "ledger-post-latency-p99": 1
+      }
+    }
+  }
+]

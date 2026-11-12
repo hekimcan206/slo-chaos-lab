@@ -1,0 +1,196 @@
+{
+  "experiment": "reset",
+  "title": "Connection reset: RST bursts (500 ms every 10 s)",
+  "fault": "Toxiproxy \u0060reset_peer\u0060 toxic, upstream, timeout=0, toggled on for 500 ms every 10 s",
+  "variant": "before",
+  "startedAt": "2026-11-11T22:30:22.2967241+00:00",
+  "ratePerSecond": 50,
+  "warmupSeconds": 60,
+  "faultSeconds": 120,
+  "recoverySeconds": 90,
+  "clientTimeoutSeconds": 2,
+  "client": [
+    {
+      "phase": "warmup",
+      "durationSeconds": 60,
+      "requests": 2985,
+      "succeeded": 2985,
+      "serverErrors": 0,
+      "clientTimeouts": 0,
+      "transportErrors": 0,
+      "availability": 1,
+      "throughputPerSecond": 49.75,
+      "p50Ms": 4.5065,
+      "p95Ms": 9.2121,
+      "p99Ms": 13.5045,
+      "p99AllMs": 13.5045,
+      "maxMs": 27.3596,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9989949748743718,
+        "ledger-post-latency-p95": 1,
+        "ledger-post-latency-p99": 1
+      }
+    },
+    {
+      "phase": "fault",
+      "durationSeconds": 120,
+      "requests": 6000,
+      "succeeded": 5808,
+      "serverErrors": 192,
+      "clientTimeouts": 0,
+      "transportErrors": 0,
+      "availability": 0.968,
+      "throughputPerSecond": 48.4,
+      "p50Ms": 4.4428,
+      "p95Ms": 9.717,
+      "p99Ms": 56.4153,
+      "p99AllMs": 55.1958,
+      "maxMs": 160.5902,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9846763085399449,
+        "ledger-post-latency-p95": 0.9955234159779615,
+        "ledger-post-latency-p99": 1
+      }
+    },
+    {
+      "phase": "recovery",
+      "durationSeconds": 90,
+      "requests": 4499,
+      "succeeded": 4499,
+      "serverErrors": 0,
+      "clientTimeouts": 0,
+      "transportErrors": 0,
+      "availability": 1,
+      "throughputPerSecond": 49.98888888888889,
+      "p50Ms": 4.5938,
+      "p95Ms": 8.6147,
+      "p99Ms": 25.3822,
+      "p99AllMs": 25.3822,
+      "maxMs": 358.9974,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9899977772838409,
+        "ledger-post-latency-p95": 0.9997777283840854,
+        "ledger-post-latency-p99": 0.9997777283840854
+      }
+    }
+  ],
+  "server": [
+    {
+      "phase": "warmup",
+      "requests": 2997,
+      "serverErrors": 15,
+      "clientClosed": 0,
+      "availability": 0.994994994994995,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9986586183769283,
+        "ledger-post-latency-p95": 1,
+        "ledger-post-latency-p99": 1
+      }
+    },
+    {
+      "phase": "fault",
+      "requests": 6004,
+      "serverErrors": 177,
+      "clientClosed": 0,
+      "availability": 0.9705196535642905,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.985241118929123,
+        "ledger-post-latency-p95": 0.9955380126995023,
+        "ledger-post-latency-p99": 1
+      }
+    },
+    {
+      "phase": "recovery",
+      "requests": 4460,
+      "serverErrors": 0,
+      "clientClosed": 0,
+      "availability": 1,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9901345291479821,
+        "ledger-post-latency-p95": 0.9997757847533633,
+        "ledger-post-latency-p99": 0.9997757847533633
+      }
+    }
+  ],
+  "budgetConsumedClient": {
+    "ledger-post-availability": 0.00148148148148148,
+    "ledger-post-latency-p50": 2.1141975308641974E-06,
+    "ledger-post-latency-p95": 4.1666666666666635E-06,
+    "ledger-post-latency-p99": 7.716049382716043E-07
+  },
+  "budgetConsumedServer": {
+    "ledger-post-availability": 0.00148148148148148,
+    "ledger-post-latency-p50": 2.067901234567901E-06,
+    "ledger-post-latency-p95": 4.1666666666666635E-06,
+    "ledger-post-latency-p99": 7.716049382716043E-07
+  },
+  "maxBurnRate5m": {
+    "ledger-post-availability": 21.483035834832787,
+    "ledger-post-latency-p50": 0.027669172932330843,
+    "ledger-post-latency-p95": 0.15186915887850372,
+    "ledger-post-latency-p99": 0.008853474988934629
+  },
+  "maxBurnRate1h": {
+    "ledger-post-availability": 21.48303583483279,
+    "ledger-post-latency-p50": 0.027669172932330843,
+    "ledger-post-latency-p95": 0.15186915887850372,
+    "ledger-post-latency-p99": 0.008853474988934629
+  },
+  "alerts": [
+    {
+      "alert": "LedgerPostAvailabilityBudgetErosion",
+      "firstFiringAfterFaultStartSeconds": 10,
+      "lastFiringAfterFaultEndSeconds": 105
+    },
+    {
+      "alert": "LedgerPostAvailabilityFastBurn",
+      "firstFiringAfterFaultStartSeconds": 55,
+      "lastFiringAfterFaultEndSeconds": 85
+    },
+    {
+      "alert": "LedgerPostAvailabilitySlowBurn",
+      "firstFiringAfterFaultStartSeconds": 20,
+      "lastFiringAfterFaultEndSeconds": 105
+    }
+  ],
+  "modelledSteadyStateAlerts": [
+    {
+      "alert": "LedgerPostAvailabilityFastBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostAvailabilitySlowBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostAvailabilityBudgetErosion",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP95FastBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP95SlowBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP95BudgetErosion",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP99FastBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP99SlowBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP99BudgetErosion",
+      "firstFiringAfterFaultStartSeconds": null
+    }
+  ],
+  "recoveryAfterFaultSeconds": 0,
+  "host": "16 logical CPUs, Ubuntu 24.04.5 LTS, .NET 10.0.15"
+}

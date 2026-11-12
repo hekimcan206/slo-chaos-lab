@@ -1,0 +1,180 @@
+{
+  "experiment": "baseline",
+  "title": "Baseline: no fault",
+  "fault": "none",
+  "variant": "after",
+  "startedAt": "2026-11-12T08:42:36.1154725+00:00",
+  "ratePerSecond": 50,
+  "warmupSeconds": 60,
+  "faultSeconds": 120,
+  "recoverySeconds": 90,
+  "clientTimeoutSeconds": 2,
+  "client": [
+    {
+      "phase": "warmup",
+      "durationSeconds": 60,
+      "requests": 2997,
+      "succeeded": 2997,
+      "serverErrors": 0,
+      "clientTimeouts": 0,
+      "transportErrors": 0,
+      "availability": 1,
+      "throughputPerSecond": 49.95,
+      "p50Ms": 4.449,
+      "p95Ms": 11.5691,
+      "p99Ms": 135.7758,
+      "p99AllMs": 135.7758,
+      "maxMs": 368.0651,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.984984984984985,
+        "ledger-post-latency-p95": 0.988988988988989,
+        "ledger-post-latency-p99": 0.9946613279946613
+      }
+    },
+    {
+      "phase": "fault",
+      "durationSeconds": 120,
+      "requests": 5999,
+      "succeeded": 5999,
+      "serverErrors": 0,
+      "clientTimeouts": 0,
+      "transportErrors": 0,
+      "availability": 1,
+      "throughputPerSecond": 49.99166666666667,
+      "p50Ms": 4.0959,
+      "p95Ms": 7.6007,
+      "p99Ms": 15.8664,
+      "p99AllMs": 15.8664,
+      "maxMs": 97.3922,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9983330555092516,
+        "ledger-post-latency-p95": 1,
+        "ledger-post-latency-p99": 1
+      }
+    },
+    {
+      "phase": "recovery",
+      "durationSeconds": 90,
+      "requests": 4500,
+      "succeeded": 4500,
+      "serverErrors": 0,
+      "clientTimeouts": 0,
+      "transportErrors": 0,
+      "availability": 1,
+      "throughputPerSecond": 50,
+      "p50Ms": 3.8818,
+      "p95Ms": 7.5086,
+      "p99Ms": 17.4345,
+      "p99AllMs": 17.4345,
+      "maxMs": 69.8142,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9926666666666667,
+        "ledger-post-latency-p95": 1,
+        "ledger-post-latency-p99": 1
+      }
+    }
+  ],
+  "server": [
+    {
+      "phase": "warmup",
+      "requests": 3001,
+      "serverErrors": 0,
+      "clientClosed": 0,
+      "availability": 1,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9860046651116294,
+        "ledger-post-latency-p95": 0.9890036654448517,
+        "ledger-post-latency-p99": 0.9946684438520493
+      }
+    },
+    {
+      "phase": "fault",
+      "requests": 6002,
+      "serverErrors": 0,
+      "clientClosed": 0,
+      "availability": 1,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9985004998333888,
+        "ledger-post-latency-p95": 1,
+        "ledger-post-latency-p99": 1
+      }
+    },
+    {
+      "phase": "recovery",
+      "requests": 4412,
+      "serverErrors": 0,
+      "clientClosed": 0,
+      "availability": 1,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9952402538531279,
+        "ledger-post-latency-p95": 1,
+        "ledger-post-latency-p99": 1
+      }
+    }
+  ],
+  "budgetConsumedClient": {
+    "ledger-post-availability": 0,
+    "ledger-post-latency-p50": 1.3580246913580248E-06,
+    "ledger-post-latency-p95": 5.092592592592588E-06,
+    "ledger-post-latency-p99": 1.2345679012345668E-05
+  },
+  "budgetConsumedServer": {
+    "ledger-post-availability": 0,
+    "ledger-post-latency-p50": 1.111111111111111E-06,
+    "ledger-post-latency-p95": 5.092592592592588E-06,
+    "ledger-post-latency-p99": 1.2345679012345668E-05
+  },
+  "maxBurnRate5m": {
+    "ledger-post-availability": 0,
+    "ledger-post-latency-p50": 0.052173913043478404,
+    "ledger-post-latency-p95": 0.36653386454182924,
+    "ledger-post-latency-p99": 0.766283524904221
+  },
+  "maxBurnRate1h": {
+    "ledger-post-availability": 0,
+    "ledger-post-latency-p50": 0.052173913043478404,
+    "ledger-post-latency-p95": 0.36653386454183146,
+    "ledger-post-latency-p99": 0.7662835249042321
+  },
+  "alerts": [],
+  "modelledSteadyStateAlerts": [
+    {
+      "alert": "LedgerPostAvailabilityFastBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostAvailabilitySlowBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostAvailabilityBudgetErosion",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP95FastBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP95SlowBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP95BudgetErosion",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP99FastBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP99SlowBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP99BudgetErosion",
+      "firstFiringAfterFaultStartSeconds": null
+    }
+  ],
+  "recoveryAfterFaultSeconds": null,
+  "host": "16 logical CPUs, Ubuntu 24.04.5 LTS, .NET 10.0.15"
+}

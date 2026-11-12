@@ -1,0 +1,191 @@
+{
+  "experiment": "baseline",
+  "title": "Baseline: no fault",
+  "fault": "none",
+  "variant": "before",
+  "startedAt": "2026-11-12T08:37:11.6263096+00:00",
+  "ratePerSecond": 50,
+  "warmupSeconds": 60,
+  "faultSeconds": 120,
+  "recoverySeconds": 90,
+  "clientTimeoutSeconds": 2,
+  "client": [
+    {
+      "phase": "warmup",
+      "durationSeconds": 60,
+      "requests": 2982,
+      "succeeded": 2982,
+      "serverErrors": 0,
+      "clientTimeouts": 0,
+      "transportErrors": 0,
+      "availability": 1,
+      "throughputPerSecond": 49.7,
+      "p50Ms": 5.3707,
+      "p95Ms": 10.9139,
+      "p99Ms": 16.6651,
+      "p99AllMs": 16.6651,
+      "maxMs": 217.6597,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9956405097250167,
+        "ledger-post-latency-p95": 0.9986586183769283,
+        "ledger-post-latency-p99": 1
+      }
+    },
+    {
+      "phase": "fault",
+      "durationSeconds": 120,
+      "requests": 5864,
+      "succeeded": 5754,
+      "serverErrors": 0,
+      "clientTimeouts": 110,
+      "transportErrors": 0,
+      "availability": 0.9812414733969986,
+      "throughputPerSecond": 47.95,
+      "p50Ms": 4.9824,
+      "p95Ms": 103.2828,
+      "p99Ms": 822.8744,
+      "p99AllMs": 7398.0215,
+      "maxMs": 8874.8915,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.932568647897115,
+        "ledger-post-latency-p95": 0.948731317344456,
+        "ledger-post-latency-p99": 0.9716718804310045
+      }
+    },
+    {
+      "phase": "recovery",
+      "durationSeconds": 90,
+      "requests": 4501,
+      "succeeded": 4501,
+      "serverErrors": 0,
+      "clientTimeouts": 0,
+      "transportErrors": 0,
+      "availability": 1,
+      "throughputPerSecond": 50.01111111111111,
+      "p50Ms": 4.5471,
+      "p95Ms": 9.0703,
+      "p99Ms": 13.3528,
+      "p99AllMs": 13.3528,
+      "maxMs": 50.9266,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9995556542990447,
+        "ledger-post-latency-p95": 1,
+        "ledger-post-latency-p99": 1
+      }
+    }
+  ],
+  "server": [
+    {
+      "phase": "warmup",
+      "requests": 2998,
+      "serverErrors": 0,
+      "clientClosed": 0,
+      "availability": 1,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.994996664442962,
+        "ledger-post-latency-p95": 0.9986657771847899,
+        "ledger-post-latency-p99": 1
+      }
+    },
+    {
+      "phase": "fault",
+      "requests": 5832,
+      "serverErrors": 0,
+      "clientClosed": 68,
+      "availability": 1,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9242112482853223,
+        "ledger-post-latency-p95": 0.9478737997256516,
+        "ledger-post-latency-p99": 0.9660493827160493
+      }
+    },
+    {
+      "phase": "recovery",
+      "requests": 4500,
+      "serverErrors": 0,
+      "clientClosed": 0,
+      "availability": 1,
+      "latencyCompliance": {
+        "ledger-post-latency-p50": 0.9995555555555555,
+        "ledger-post-latency-p95": 1,
+        "ledger-post-latency-p99": 1
+      }
+    }
+  ],
+  "budgetConsumedClient": {
+    "ledger-post-availability": 0.0008487654320987647,
+    "ledger-post-latency-p50": 6.2191358024691355E-06,
+    "ledger-post-latency-p95": 4.614197530864194E-05,
+    "ledger-post-latency-p99": 0.00012577160493827149
+  },
+  "budgetConsumedServer": {
+    "ledger-post-availability": 0,
+    "ledger-post-latency-p50": 7.083333333333333E-06,
+    "ledger-post-latency-p95": 4.7530864197530825E-05,
+    "ledger-post-latency-p99": 0.00015277777777777764
+  },
+  "maxBurnRate5m": {
+    "ledger-post-availability": 0,
+    "ledger-post-latency-p50": 0.19052201106567224,
+    "ledger-post-latency-p95": 1.2478163214374827,
+    "ledger-post-latency-p99": 3.4508257333004666
+  },
+  "maxBurnRate1h": {
+    "ledger-post-availability": 0,
+    "ledger-post-latency-p50": 0.19052201106567224,
+    "ledger-post-latency-p95": 1.247816321437487,
+    "ledger-post-latency-p99": 3.4508257333004777
+  },
+  "alerts": [
+    {
+      "alert": "LedgerPostLatencyP95BudgetErosion",
+      "firstFiringAfterFaultStartSeconds": 30,
+      "lastFiringAfterFaultEndSeconds": -75
+    },
+    {
+      "alert": "LedgerPostLatencyP99BudgetErosion",
+      "firstFiringAfterFaultStartSeconds": 20,
+      "lastFiringAfterFaultEndSeconds": 105
+    }
+  ],
+  "modelledSteadyStateAlerts": [
+    {
+      "alert": "LedgerPostAvailabilityFastBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostAvailabilitySlowBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostAvailabilityBudgetErosion",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP95FastBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP95SlowBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP95BudgetErosion",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP99FastBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP99SlowBurn",
+      "firstFiringAfterFaultStartSeconds": null
+    },
+    {
+      "alert": "LedgerPostLatencyP99BudgetErosion",
+      "firstFiringAfterFaultStartSeconds": null
+    }
+  ],
+  "recoveryAfterFaultSeconds": null,
+  "host": "16 logical CPUs, Ubuntu 24.04.5 LTS, .NET 10.0.15"
+}
