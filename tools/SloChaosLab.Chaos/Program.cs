@@ -75,7 +75,7 @@ switch (command)
         {
             var dir = options.Get("results", "docs/results");
             var results = Directory.GetFiles(dir, "*-*.json")
-                .Where(f => !f.EndsWith("capacity.json", StringComparison.Ordinal))
+                .Where(f => !Path.GetFileName(f).StartsWith("capacity", StringComparison.Ordinal))
                 .Select(f => JsonSerializer.Deserialize<RunResult>(File.ReadAllText(f), json)!)
                 .ToList();
             var path = Path.Combine(dir, "summary.md");
