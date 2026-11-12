@@ -6,6 +6,7 @@
     <Project Path="src/SloChaosLab.Slo/SloChaosLab.Slo.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/SloChaosLab.IntegrationTests/SloChaosLab.IntegrationTests.csproj" />
     <Project Path="tests/SloChaosLab.UnitTests/SloChaosLab.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tools/">
