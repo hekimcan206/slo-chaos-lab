@@ -69,14 +69,20 @@ internal sealed class PostingService
 
     private async Task<Result<PostOutcome>> AttemptAsync(string key, byte[] hash, JournalEntryDraft draft, CancellationToken cancellationToken)
     {
+        Task<Result<PostOutcome>>? attempt = null;
         try
         {
-            var result = await _store.PostAsync(key, hash, draft, cancellationToken);
+            // WaitAsync makes the timeouts hard: Npgsql does not always return promptly when a command on a
+            // black-holed connection is cancelled (partition, postmortem 5), and Polly's timeouts are cooperative.
+            // An abandoned call keeps running until Npgsql's own timeouts end it; idempotency makes that harmless.
+            attempt = _store.PostAsync(key, hash, draft, cancellationToken);
+            var result = await attempt.WaitAsync(cancellationToken);
             _metrics.Attempt("ok");
             return result;
         }
         catch (Exception ex) when (IsDependencyFailure(ex))
         {
+            ObserveIfAbandoned(attempt);
             _metrics.Attempt(ex switch
             {
                 NpgsqlException { IsTransient: true } => "transient_error",
@@ -84,6 +90,19 @@ internal sealed class PostingService
                 _ => "error",
             });
             throw;
+        }
+    }
+
+    /// <summary>An attempt we stopped waiting for must not surface later as an unobserved task exception.</summary>
+    private static void ObserveIfAbandoned(Task? attempt)
+    {
+        if (attempt is { IsCompleted: false })
+        {
+            _ = attempt.ContinueWith(
+                static t => _ = t.Exception,
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
         }
     }
 

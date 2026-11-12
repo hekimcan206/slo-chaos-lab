@@ -85,7 +85,8 @@ internal sealed class DatabaseHealthCheck(NpgsqlDataSource dataSource) : IHealth
             using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             deadline.CancelAfter(TimeSpan.FromSeconds(2));
             await using var cmd = dataSource.CreateCommand("SELECT 1");
-            await cmd.ExecuteScalarAsync(deadline.Token);
+            // WaitAsync: a black-holed connection may not honour cancellation promptly; the probe must still answer.
+            await cmd.ExecuteScalarAsync(deadline.Token).WaitAsync(deadline.Token);
             return HealthCheckResult.Healthy();
         }
         catch (Exception ex) when (ex is NpgsqlException or OperationCanceledException or TimeoutException)
