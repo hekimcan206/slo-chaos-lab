@@ -1,0 +1,184 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+jobs:
+  build-test:
+    name: build & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - uses: actions/cache@v6
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', 'global.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore
+
+      # Package versions are pinned and updated by hand, so a known vulnerability in any direct or
+      # transitive package fails the build. Fix it with a pinned upgrade in Directory.Packages.props.
+      - name: Audit for vulnerable packages
+        run: |
+          set -o pipefail
+          dotnet list package --vulnerable --include-transitive 2>&1 | tee vulnerable-packages.txt
+          if grep -q "has the following vulnerable packages" vulnerable-packages.txt; then
+            echo "::error::Known-vulnerable NuGet packages found (see the list above)"
+            exit 1
+          fi
+
+      - name: Format check
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Build (warnings are errors)
+        run: dotnet build --no-restore --configuration Release
+
+      # Unit, property and golden tests, then integration tests: PostgreSQL and Toxiproxy start through
+      # Testcontainers on the runner's Docker engine; the fault-injection tests break the link between them.
+      - name: Test
+        run: >
+          dotnet test --no-build --configuration Release
+          --coverage --coverage-output-format cobertura
+          --results-directory "${{ github.workspace }}/TestResults"
+
+      - name: Coverage summary
+        if: always()
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.5.12
+        with:
+          reports: TestResults/**/*.cobertura.xml
+          targetdir: coverage
+          reporttypes: MarkdownSummaryGithub
+          assemblyfilters: "-*Tests*;-SloChaosLab.AppHost"
+          filefilters: "-*/obj/*"
+
+      - name: Publish coverage to job summary
+        if: always()
+        run: |
+          if [ -f coverage/SummaryGithub.md ]; then
+            cat coverage/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No coverage report produced."
+          fi
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: test-results
+          path: TestResults/
+          retention-days: 7
+
+  # The alerting rules are code: promtool validates them and runs the unit tests that prove each alert fires (and
+  # stays silent) on synthetic series; the dashboard JSON must equal what its generator produces.
+  slo-rules:
+    name: SLO rules (promtool) & dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: promtool check + test rules
+        run: |
+          docker run --rm -v "$PWD/deploy/prometheus:/p" -w /p/tests --entrypoint promtool prom/prometheus:v3.15.1 check rules /p/rules/slo-rules.yml
+          docker run --rm -v "$PWD/deploy/prometheus:/p" -w /p/tests --entrypoint promtool prom/prometheus:v3.15.1 check config /p/prometheus.yml
+          docker run --rm -v "$PWD/deploy/prometheus:/p" -w /p/tests --entrypoint promtool prom/prometheus:v3.15.1 test rules slo-rules.test.yml
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.23.4"
+
+      - name: Dashboard is generated, not hand-edited
+        run: |
+          node tools/dashboard/build-dashboard.mjs > "$RUNNER_TEMP/slo.json"
+          diff -u deploy/grafana/dashboards/slo.json "$RUNNER_TEMP/slo.json"
+
+      - name: Screenshot tool dependencies have no known vulnerabilities
+        working-directory: tools/screenshots
+        run: npm install --no-fund --package-lock-only --silent && npm audit --audit-level=low
+
+  container:
+    name: container images
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build api image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: api
+          push: false
+          load: true
+          tags: slo-chaos-lab-api:ci
+          cache-from: type=gha,scope=lab
+          cache-to: type=gha,mode=max,scope=lab
+
+      - name: Build chaos image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: chaos
+          push: false
+          load: true
+          tags: slo-chaos-lab-chaos:ci
+          cache-from: type=gha,scope=lab
+
+      - name: Verify both images run as non-root
+        run: |
+          for image in slo-chaos-lab-api:ci slo-chaos-lab-chaos:ci; do
+            user=$(docker image inspect "$image" --format '{{.Config.User}}')
+            echo "$image user: ${user}"
+            test -n "${user}" && test "${user}" != "0" && test "${user}" != "root"
+          done
+
+  # The README promises `docker compose up` runs the lab with zero manual steps, and the chaos smoke test is the
+  # alerting pipeline's end-to-end check: steady load, a full partition between service and database, and the
+  # page-level burn-rate alert must fire in Prometheus (and nothing may fire during the healthy warm-up).
+  chaos-smoke:
+    name: compose demo & chaos smoke (alert must fire)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Start the lab
+        run: docker compose up -d --build postgres toxiproxy api prometheus
+
+      - name: Partition the database; LedgerPostAvailabilityFastBurn must fire
+        run: |
+          docker compose run --rm demo 2>&1 | tee smoke.log
+          grep -q "^PASS: LedgerPostAvailabilityFastBurn fired" smoke.log
+
+      - name: The alert is visible in the Prometheus API
+        run: |
+          curl -fsS http://127.0.0.1:58390/api/v1/alerts | tee alerts.json
+          grep -q '"alertname":"LedgerPostAvailabilityFastBurn"' alerts.json
+
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs
